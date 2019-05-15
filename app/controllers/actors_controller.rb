@@ -1,6 +1,7 @@
 require 'uri'
 require 'net/http'
 require 'rest-client'
+require 'date'
 
 class ActorsController < ApplicationController
 
@@ -18,7 +19,7 @@ class ActorsController < ApplicationController
       render json: found_actor
 
     # if actor is not in our database, create the object we need
-    # store it in our database and then render that to frontend    
+    # store it in our database and then render that to frontend
     else
       spacedName = actor_name.split(" ").join("+")
 
@@ -45,12 +46,23 @@ class ActorsController < ApplicationController
       tmdb_creds_res = Net::HTTP.get_response(tmdb_creds_url).body
       tmdb_cred = JSON.parse(tmdb_creds_res)
 
+      # change bday to user readable format
+      bday = Date.parse(tmdb_info["birthday"])
+      sting_bday = bday.strftime("%b %d %Y")
+
+      # change dday - if actor is decesased - to user readable format
+      string_dday = nil
+      if tmdb_info["deathday"]
+        dday = Date.parse(tmdb_info["deathday"])
+        string_dday = dday.strftime("%b %d %Y")
+      end
+
       # create desired actor object, store in database and pass to frontend
       actor_profile = {}
       actor_profile["name"] = actor_name
       actor_profile["img_url"] = imdb_image_url
-      actor_profile["birthday"] = tmdb_info["birthday"]
-      actor_profile["deathday"] = tmdb_info["deathday"]
+      actor_profile["birthday"] = sting_bday
+      actor_profile["deathday"] = string_dday
       actor_profile["biography"] = tmdb_info["biography"]
       actor_profile["place_of_birth"] = tmdb_info["place_of_birth"]
       actor_profile["imdb_id"] = imdb_id
