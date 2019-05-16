@@ -38,47 +38,55 @@ class ActorsController < ApplicationController
     body = res.body
     cleaned = body.split(/(\{.*\})/m)[1]
     json = JSON.parse(cleaned)
-    imdb_image_url = json["d"][0]["i"][0]
-    imdb_id = json["d"][0]["id"]
 
-    # use IMDB id to get actor TMDB id
-    tmdb_id_url = URI("https://api.themoviedb.org/3/find/#{imdb_id}?external_source=imdb_id&language=en-US&api_key=61f1a408f4732dfbc73bad3e452b9a41")
-    tmdb_id_res = Net::HTTP.get_response(tmdb_id_url).body
-    tmdb_id = JSON.parse(tmdb_id_res)["person_results"][0]["id"]
+    new_actor = nil
 
-    # use TMDB id to get actor TMDB details including bday, bio and birthplace
-    tmdb_info_url = URI("https://api.themoviedb.org/3/person/#{tmdb_id}?language=en-US&api_key=61f1a408f4732dfbc73bad3e452b9a41")
-    tmdb_info_res = Net::HTTP.get_response(tmdb_info_url).body
-    tmdb_info = JSON.parse(tmdb_info_res)
+    begin
+      imdb_image_url = json["d"][0]["i"][0]
+      imdb_id = json["d"][0]["id"]
 
-    # change bday to user readable format
-    bday = Date.parse(tmdb_info["birthday"])
-    sting_bday = bday.strftime("%b %d %Y")
+      # use IMDB id to get actor TMDB id
+      tmdb_id_url = URI("https://api.themoviedb.org/3/find/#{imdb_id}?external_source=imdb_id&language=en-US&api_key=61f1a408f4732dfbc73bad3e452b9a41")
+      tmdb_id_res = Net::HTTP.get_response(tmdb_id_url).body
+      tmdb_id = JSON.parse(tmdb_id_res)["person_results"][0]["id"]
 
-    # change dday (if actor is decesased) to user readable format
-    string_dday = nil
-    if tmdb_info["deathday"]
-      dday = Date.parse(tmdb_info["deathday"])
-      string_dday = dday.strftime("%b %d %Y")
+      # use TMDB id to get actor TMDB details including bday, bio and birthplace
+      tmdb_info_url = URI("https://api.themoviedb.org/3/person/#{tmdb_id}?language=en-US&api_key=61f1a408f4732dfbc73bad3e452b9a41")
+      tmdb_info_res = Net::HTTP.get_response(tmdb_info_url).body
+      tmdb_info = JSON.parse(tmdb_info_res)
+
+      # change bday to user readable format
+      bday = Date.parse(tmdb_info["birthday"])
+      sting_bday = bday.strftime("%b %d %Y")
+
+      # change dday (if actor is decesased) to user readable format
+      string_dday = nil
+      if tmdb_info["deathday"]
+        dday = Date.parse(tmdb_info["deathday"])
+        string_dday = dday.strftime("%b %d %Y")
+      end
+
+      # create desired actor object, store in database and pass to frontend
+      actor_profile = {}
+      actor_profile["name"] = actor_name
+      actor_profile["img_url"] = imdb_image_url
+      actor_profile["birthday"] = sting_bday
+      actor_profile["deathday"] = string_dday
+      actor_profile["biography"] = tmdb_info["biography"]
+      actor_profile["place_of_birth"] = tmdb_info["place_of_birth"]
+      actor_profile["imdb_id"] = imdb_id
+
+      new_actor = Actor.create(actor_profile)
+
+      # use TMDB id toget actor TMDB movie credits
+      create_movies_and_genres(tmdb_id, new_actor)
+      new_actor
+    rescue
+      new_actor
     end
-
-    # create desired actor object, store in database and pass to frontend
-    actor_profile = {}
-    actor_profile["name"] = actor_name
-    actor_profile["img_url"] = imdb_image_url
-    actor_profile["birthday"] = sting_bday
-    actor_profile["deathday"] = string_dday
-    actor_profile["biography"] = tmdb_info["biography"]
-    actor_profile["place_of_birth"] = tmdb_info["place_of_birth"]
-    actor_profile["imdb_id"] = imdb_id
-
-    new_actor = Actor.create(actor_profile)
-
-    # use TMDB id toget actor TMDB movie credits
-    create_movies_and_genres(tmdb_id, new_actor)
-    new_actor
-
   end
+
+
 
   def create
     actor_name = params["name"]
@@ -89,20 +97,23 @@ class ActorsController < ApplicationController
       actor_obj = {}
       actor_obj = found_actor.as_json
       actor_obj[:movies] = found_actor.movies.as_json
-      # byebug
+
       render json: actor_obj
     # if actor is not in our database, create the object we need
     # store it in our database and then render that to frontend
     else
-      found_actor = create_actor_object(actor_name)
-      actor_obj = {}
-      actor_obj = found_actor.as_json
-      actor_obj[:movies] = found_actor.movies.as_json
-      render json: actor_obj
+      begin
+      new_actor = create_actor_object(actor_name)
+        actor_obj = {}
+        actor_obj = new_actor.as_json
+        actor_obj[:movies] = new_actor.movies.as_json
+        render json: actor_obj
+      rescue
+        render json: ["no actor found"]
+      end
     end
   end
 
-  def update
-  end
+
 
 end
