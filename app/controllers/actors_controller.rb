@@ -6,7 +6,8 @@ require 'date'
 class ActorsController < ApplicationController
 
   def index
-
+    actors = Actor.all
+    render json: actors
   end
 
   def create_movies_and_genres(tmdb_id, new_actor)
@@ -94,26 +95,18 @@ class ActorsController < ApplicationController
     # if so, return actor instance and don't run API fetches
     found_actor = Actor.find_by(name: actor_name)
     if found_actor
-      actor_obj = {}
-      actor_obj = found_actor.as_json
-      actor_obj[:movies] = found_actor.movies.as_json
-
-      render json: actor_obj
+      render json: found_actor
     # if actor is not in our database, create the object we need
     # store it in our database and then render that to frontend
     else
       begin
-      new_actor = create_actor_object(actor_name)
-        actor_obj = {}
-        actor_obj = new_actor.as_json
-        actor_obj[:movies] = new_actor.movies.as_json
-        render json: actor_obj
+        new_actor = create_actor_object(actor_name)
+        render json: new_actor
       rescue
         render json: ["no actor found"]
       end
     end
   end
-
 
 
 end
