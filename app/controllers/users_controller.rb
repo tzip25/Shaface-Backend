@@ -1,7 +1,6 @@
 class UsersController < ApplicationController
 
     def create
-      # byebug
       user = User.new(
         email: params[:email],
   			first_name: params[:firstName],
@@ -19,8 +18,8 @@ class UsersController < ApplicationController
 
 
     def update
-      byebug
-      curr_user.update(params)
+      curr_user.update(first_name: params["first_name"], last_name: params["last_name"], email: params["email"], username: params["username"])
+      render json: curr_user
     end
 
 end
