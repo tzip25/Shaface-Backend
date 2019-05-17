@@ -91,16 +91,18 @@ class ActorsController < ApplicationController
 
   def create
     actor_name = params["name"]
-    # check if actor already exists in our db. if so, return actor
+    # check if actor exists in our db. if so, return actor
     found_actor = Actor.find_by(name: actor_name)
     if found_actor
-      curr_user ? curr_user.actors << found_actor : nil
+      # check if there is a current user and that actor is not already
+      # associated with that user. if both true, associate them
+      curr_user && !curr_user.actors.include?(found_actor) ? curr_user.actors << found_actor : nil
       render json: found_actor
     # if not in db, create actor, store in db and return new actor
     else
       begin
         new_actor = create_actor_object(actor_name)
-        curr_user ? curr_user.actors << new_actor : nil
+        curr_user && !curr_user.actors.include?(new_actor) ? curr_user.actors << new_actor : nil
         render json: new_actor
       rescue
         render json: ["no actor found"]
