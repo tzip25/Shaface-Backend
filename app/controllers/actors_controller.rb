@@ -91,16 +91,16 @@ class ActorsController < ApplicationController
 
   def create
     actor_name = params["name"]
-    # check if actor already exists in our database
-    # if so, return actor instance and don't run API fetches
+    # check if actor already exists in our db. if so, return actor
     found_actor = Actor.find_by(name: actor_name)
     if found_actor
+      curr_user ? curr_user.actors << found_actor : nil
       render json: found_actor
-    # if actor is not in our database, create the object we need
-    # store it in our database and then render that to frontend
+    # if not in db, create actor, store in db and return new actor
     else
       begin
         new_actor = create_actor_object(actor_name)
+        curr_user ? curr_user.actors << new_actor : nil
         render json: new_actor
       rescue
         render json: ["no actor found"]
