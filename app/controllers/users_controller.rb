@@ -23,8 +23,7 @@ class UsersController < ApplicationController
     end
 
     def destroy
-      user = User.find(params[:id])
-      user.destroy
+      curr_user.destroy
     end
 
 end
