@@ -110,5 +110,10 @@ class ActorsController < ApplicationController
     end
   end
 
+  def destroy
+    user_actor = UserActor.find_by(user_id: curr_user.id, actor_id: params["id"])
+    user_actor.destroy
+    render json: curr_user
+  end
 
 end
