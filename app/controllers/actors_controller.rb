@@ -10,6 +10,14 @@ class ActorsController < ApplicationController
     render json: actors
   end
 
+  def stats
+    statsObj = {}
+    statsObj[:actors] = Actor.all.length
+    statsObj[:searches] = UserActor.all.length
+
+    render json: statsObj
+  end
+
   def create_movies_and_genres(tmdb_id, new_actor)
     tmdb_creds_url = URI("https://api.themoviedb.org/3/person/#{tmdb_id}/combined_credits?language=en-US&api_key=61f1a408f4732dfbc73bad3e452b9a41")
     tmdb_creds_res = Net::HTTP.get_response(tmdb_creds_url).body
@@ -86,7 +94,6 @@ class ActorsController < ApplicationController
       new_actor
     end
   end
-
 
 
   def create
