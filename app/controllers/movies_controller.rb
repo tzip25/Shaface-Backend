@@ -1,14 +1,15 @@
 class MoviesController < ApplicationController
 
+  #baconize feature - find actor movie associations
   def index
 
     movieArr = []
     filteredArr = []
-
+    #iterate over current user's actors and then over each actor's movies
     curr_user.actors.map do |actor|
       actor.movies.map do |movie|
         movieHash = {}
-
+        #create hash for each movie
         movieHash["media_type"] = movie.media_type
         movieHash["year"] = movie.year
         movieHash["title"] = movie.title
