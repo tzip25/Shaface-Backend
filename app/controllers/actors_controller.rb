@@ -25,16 +25,18 @@ class ActorsController < ApplicationController
     # iterate through results to create a movie instance for each, a genre instance for each
     # and a movie_genres association for each
     tmdb_cred["cast"].each do |movie|
-      #create movie instance for each one
-      found_movie = Movie.find_or_create_by(tmdb_id: movie["id"], title: movie["title"] || movie["name"], year: movie["release_date"], media_type: movie["media_type"])
-      new_actor.movies << found_movie
+      if movie["media_type"] == "movie"
+        #create movie instance for each one
+        found_movie = Movie.find_or_create_by(tmdb_id: movie["id"], title: movie["title"] || movie["name"], year: movie["release_date"], media_type: movie["media_type"])
+        new_actor.movies << found_movie
 
-      #check if movie has genres listed,
-      # if so, create genre instance and associate with movie
-      if movie["genre_ids"].length > 0
-        movie["genre_ids"].each do |genre|
-          found_genre = Genre.find_by(tmdb_id: genre)
-          found_genre ? found_movie.genres << found_genre : nil
+        #check if movie has genres listed,
+        # if so, create genre instance and associate with movie
+        if movie["genre_ids"].length > 0
+          movie["genre_ids"].each do |genre|
+            found_genre = Genre.find_by(tmdb_id: genre)
+            found_genre ? found_movie.genres << found_genre : nil
+          end
         end
       end
 
