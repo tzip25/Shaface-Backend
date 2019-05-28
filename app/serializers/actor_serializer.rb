@@ -3,7 +3,9 @@ class ActorSerializer < ActiveModel::Serializer
 
   def movies
     movieObj = self.object.movies.map do |movie|
-      if movie.year
+      time = Time.new
+      time.year
+      if movie.year && movie.year <= time.year
         {
           id: movie.id,
           title: movie.title,
