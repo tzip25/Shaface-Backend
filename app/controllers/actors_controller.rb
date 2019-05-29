@@ -113,8 +113,12 @@ class ActorsController < ApplicationController
     else
       begin
         new_actor = create_actor_object(actor_name)
-        curr_user && !curr_user.actors.include?(new_actor) ? curr_user.actors << new_actor : nil
-        render json: new_actor
+        if new_actor
+          curr_user && !curr_user.actors.include?(new_actor) ? curr_user.actors << new_actor : nil
+          render json: new_actor
+        else
+          render json: ["no actor found"]
+        end
       rescue
         render json: ["no actor found"]
       end
